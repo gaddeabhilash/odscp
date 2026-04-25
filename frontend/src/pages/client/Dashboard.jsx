@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { getProjects } from '../../services/projectService';
 import { Card } from '../../components/ui/Card';
+import { useNavigate } from 'react-router-dom';
+import { ChevronRight } from 'lucide-react';
 
 export default function Dashboard() {
   const { user } = useAuthStore();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -45,17 +48,24 @@ export default function Dashboard() {
         </Card>
       ) : (
         projects.map(project => (
-          <Card key={project._id} className="p-6 md:p-8 transition-all hover:shadow-md group">
+          <Card 
+            key={project._id} 
+            className="p-6 md:p-8 transition-all hover:shadow-xl hover:-translate-y-1 group cursor-pointer border-gray-100"
+            onClick={() => navigate(`/timeline?projectId=${project._id}`)}
+          >
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
               <div>
-                <h3 className="text-xl font-bold text-gray-900">{project.projectName}</h3>
+                <h3 className="text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{project.projectName}</h3>
                 <p className="text-sm text-gray-500 mt-1">Started {new Date(project.createdAt).toLocaleDateString()}</p>
               </div>
-              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                project.status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-indigo-100 text-indigo-700'
-              }`}>
-                {project.status} Phase
-              </span>
+              <div className="flex items-center gap-4">
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                  project.status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-indigo-100 text-indigo-700'
+                }`}>
+                  {project.status} Phase
+                </span>
+                <ChevronRight className="text-gray-300 group-hover:text-indigo-600 transition-colors" size={24} />
+              </div>
             </div>
             
             <div className="mt-8 bg-gray-50 p-4 rounded-lg border border-gray-100">
