@@ -77,31 +77,52 @@ const deleteUser = asyncHandler(async (req, res) => {
 // @route   PATCH /api/users/:id
 // @access  Private/Admin
 const updateUser = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id);
+  const { name, email, role, password } = req.body;
+  
+  const updateData = {};
+  if (name) updateData.name = name;
+  if (email) updateData.email = email;
+  if (role) updateData.role = role;
+  
+  // If password is provided, we need to hash it (or let the pre-save hook handle it)
+  // For simplicity and security, we'll use findById and save if password is changed, 
+  // but for name/email/role, we use findByIdAndUpdate.
+  
+  if (password) {
+    const user = await User.findById(req.params.id).select('+password');
+    if (!user) {
+      res.status(404);
+      throw new Error('User not found');
+    }
+    user.name = name || user.name;
+    user.email = email || user.email;
+    user.role = role || user.role;
+    user.password = password;
+    await user.save();
+    
+    res.status(200).json({
+      success: true,
+      message: 'User updated successfully',
+      data: { _id: user._id, name: user.name, email: user.email, role: user.role }
+    });
+  } else {
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id, 
+      updateData, 
+      { new: true, runValidators: true }
+    );
 
-  if (!user) {
-    res.status(404);
-    throw new Error('User not found');
+    if (!updatedUser) {
+      res.status(404);
+      throw new Error('User not found');
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'User updated successfully',
+      data: updatedUser,
+    });
   }
-
-  // Update fields
-  if (req.body.name) user.name = req.body.name;
-  if (req.body.email) user.email = req.body.email;
-  if (req.body.role) user.role = req.body.role;
-  if (req.body.password) user.password = req.body.password;
-
-  const updatedUser = await user.save();
-
-  res.status(200).json({
-    success: true,
-    message: 'User updated successfully',
-    data: {
-      _id: updatedUser._id,
-      name: updatedUser.name,
-      email: updatedUser.email,
-      role: updatedUser.role,
-    },
-  });
 });
 
 module.exports = {
