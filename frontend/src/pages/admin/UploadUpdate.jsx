@@ -5,7 +5,7 @@ import { Input } from '../../components/ui/Input';
 import { UploadCloud, Image as ImageIcon, X, FileVideo } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export default function UploadUpdate() {
   const [projects, setProjects] = useState([]);
@@ -18,8 +18,13 @@ export default function UploadUpdate() {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const pid = params.get('projectId');
+    if (pid) setProjectId(pid);
+
     const fetchProjects = async () => {
       try {
         const res = await api.get('/projects');
@@ -29,7 +34,7 @@ export default function UploadUpdate() {
       }
     };
     fetchProjects();
-  }, []);
+  }, [location.search]);
 
   const handleDragOver = (e) => {
     e.preventDefault();

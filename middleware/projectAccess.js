@@ -2,8 +2,8 @@ const asyncHandler = require('express-async-handler');
 const Project = require('../models/Project');
 
 const verifyProjectAccess = asyncHandler(async (req, res, next) => {
-  // Can get projectId from params or body depending on route structure
-  const projectId = req.params.projectId || req.body.projectId;
+  // Can get projectId from params, body, or query depending on route structure
+  const projectId = req.params.projectId || req.body.projectId || req.query.projectId;
 
   if (!projectId) {
     res.status(400);

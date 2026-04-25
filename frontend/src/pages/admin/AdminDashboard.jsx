@@ -60,30 +60,34 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="p-6 md:p-8 flex items-center gap-5 hover:border-indigo-100 hover:shadow-md transition-all cursor-pointer group">
-          <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center group-hover:bg-indigo-100 group-hover:scale-105 transition-all">
-            <Users className="text-indigo-600" size={24} />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Total Provisioned</p>
-            <h3 className="text-3xl font-bold text-gray-900 tracking-tight">{stats.users}</h3>
-            <p className="text-xs text-indigo-600 font-semibold mt-1">Clients Active</p>
-          </div>
-        </Card>
+        <Link to="/admin/clients" className="block">
+          <Card className="p-6 md:p-8 flex items-center gap-5 hover:border-indigo-100 hover:shadow-md transition-all cursor-pointer group h-full">
+            <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all">
+              <Users size={24} />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Total Provisioned</p>
+              <h3 className="text-3xl font-bold text-gray-900 tracking-tight">{stats.users}</h3>
+              <p className="text-xs text-indigo-600 font-semibold mt-1">Clients Active</p>
+            </div>
+          </Card>
+        </Link>
 
-        <Card className="p-6 md:p-8 flex items-center gap-5 hover:border-blue-100 hover:shadow-md transition-all cursor-pointer group">
-          <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center group-hover:bg-blue-100 group-hover:scale-105 transition-all">
-            <Folder className="text-blue-600" size={24} />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Active Pipelines</p>
-            <h3 className="text-3xl font-bold text-gray-900 tracking-tight">{stats.projects}</h3>
-            <p className="text-xs text-blue-600 font-semibold mt-1">Projects Open</p>
-          </div>
-        </Card>
+        <Link to="/admin/projects" className="block">
+          <Card className="p-6 md:p-8 flex items-center gap-5 hover:border-blue-100 hover:shadow-md transition-all cursor-pointer group h-full">
+            <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all">
+              <Folder size={24} />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Active Pipelines</p>
+              <h3 className="text-3xl font-bold text-gray-900 tracking-tight">{stats.projects}</h3>
+              <p className="text-xs text-blue-600 font-semibold mt-1">Projects Open</p>
+            </div>
+          </Card>
+        </Link>
 
-        <Card className="p-6 md:p-8 flex items-center gap-5 hover:border-emerald-100 hover:shadow-md transition-all cursor-pointer group">
-          <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center group-hover:bg-emerald-100 group-hover:scale-105 transition-all">
+        <Card className="p-6 md:p-8 flex items-center gap-5 hover:border-emerald-100 hover:shadow-md transition-all cursor-default group">
+          <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center">
             <Activity className="text-emerald-600" size={24} />
           </div>
           <div>

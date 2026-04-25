@@ -7,7 +7,7 @@ const { verifyProjectAccess } = require('../middleware/projectAccess');
 const { upload } = require('../config/cloudinary');
 
 router.route('/')
-  .post(protect, authorize('admin'), verifyProjectAccess, upload.single('file'), addFile);
+  .post(protect, authorize('admin'), upload.single('file'), verifyProjectAccess, addFile);
 
 router.route('/project/:projectId')
   .get(protect, verifyProjectAccess, getFiles);

@@ -5,9 +5,10 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import {
   Folder, Plus, Search, Edit2, Trash2, CheckCircle, Clock,
-  Loader2, X, UploadCloud, FileText, Save
+  Loader2, X, UploadCloud, FileText, Save, ExternalLink
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 const STATUS_OPTIONS = ['Planning', 'Design', 'Execution', 'In Progress', 'Review', 'Completed'];
 
@@ -16,6 +17,7 @@ export default function ManageProjects() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const navigate = useNavigate();
 
   // Modals
   const [showAddModal, setShowAddModal] = useState(false);
@@ -30,6 +32,8 @@ export default function ManageProjects() {
 
   // Edit form state
   const [editForm, setEditForm] = useState({ status: '', progress: 0 });
+  const [editDocFile, setEditDocFile] = useState(null);
+  const editDocInputRef = useRef(null);
 
   useEffect(() => { fetchData(); }, []);
 
@@ -61,7 +65,7 @@ export default function ManageProjects() {
       // Upload document if one was attached
       if (docFile && createdProject?._id) {
         const formData = new FormData();
-        formData.append('document', docFile);
+        formData.append('file', docFile);
         formData.append('projectId', createdProject._id);
         formData.append('fileName', docFile.name);
         await api.post('/files', formData, {
@@ -95,17 +99,31 @@ export default function ManageProjects() {
   const openEdit = (project) => {
     setEditingProject(project);
     setEditForm({ status: project.status, progress: project.progress });
+    setEditDocFile(null);
   };
 
   const handleSaveEdit = async (e) => {
     e.preventDefault();
     try {
       const res = await api.patch(`/projects/${editingProject._id}`, editForm);
+      
+      // Upload document if one was attached during edit
+      if (editDocFile) {
+        const formData = new FormData();
+        formData.append('file', editDocFile);
+        formData.append('projectId', editingProject._id);
+        formData.append('fileName', editDocFile.name);
+        await api.post('/files', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      }
+
       toast.success('Pipeline updated');
       setProjects(prev =>
         prev.map(p => p._id === editingProject._id ? { ...p, ...res.data.data } : p)
       );
       setEditingProject(null);
+      setEditDocFile(null);
     } catch {
       toast.error('Failed to update pipeline');
     }
@@ -161,6 +179,13 @@ export default function ManageProjects() {
                   <Folder size={24} />
                 </div>
                 <div className="flex gap-1">
+                  <button
+                    onClick={() => navigate(`/admin/update-upload?projectId=${project._id}`)}
+                    className="p-2 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                    title="Direct Media Upload"
+                  >
+                    <UploadCloud size={16} />
+                  </button>
                   <button
                     onClick={() => openEdit(project)}
                     className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
@@ -310,7 +335,7 @@ export default function ManageProjects() {
       {/* ── Edit Project Modal ── */}
       {editingProject && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
-          <Card className="w-full max-w-md p-8 shadow-2xl border-0">
+          <Card className="w-full max-w-md p-8 shadow-2xl border-0 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-8">
               <div>
                 <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">Edit Pipeline</h2>
@@ -350,11 +375,41 @@ export default function ManageProjects() {
                 </div>
               </div>
 
+              {/* Edit Document Upload */}
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-black text-gray-500 uppercase tracking-widest">Upload New Document</label>
+                {editDocFile ? (
+                  <div className="flex items-center gap-3 px-4 py-3 bg-indigo-50 border-2 border-indigo-200 rounded-xl">
+                    <FileText size={20} className="text-indigo-600 shrink-0" />
+                    <span className="text-xs font-bold text-indigo-800 truncate flex-1">{editDocFile.name}</span>
+                    <button type="button" onClick={() => { setEditDocFile(null); editDocInputRef.current.value = ''; }}
+                      className="text-indigo-400 hover:text-red-500 transition-colors">
+                      <X size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => editDocInputRef.current?.click()}
+                    className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center gap-2 cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/30 transition-all"
+                  >
+                    <UploadCloud size={24} className="text-gray-400" />
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Replace or add document</p>
+                  </div>
+                )}
+                <input
+                  ref={editDocInputRef}
+                  type="file"
+                  className="hidden"
+                  accept=".pdf,.doc,.docx,.xlsx,.png,.jpg"
+                  onChange={e => setEditDocFile(e.target.files[0] || null)}
+                />
+              </div>
+
               <div className="flex gap-3 pt-2">
                 <Button type="button" variant="ghost" onClick={() => setEditingProject(null)} className="flex-1 font-bold uppercase text-xs py-4">
                   Cancel
                 </Button>
-                <Button type="submit" className="flex-1 font-bold uppercase text-xs py-4 flex items-center gap-2 justify-center">
+                <Button type="submit" className="flex-1 font-bold uppercase text-xs py-4 flex items-center gap-2 justify-center shadow-lg shadow-indigo-100">
                   <Save size={16} /> Save Changes
                 </Button>
               </div>

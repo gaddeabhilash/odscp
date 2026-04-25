@@ -297,7 +297,7 @@ const mockApiMiddleware = (req, res, next) => {
 
     // POST /api/files — document upload for project
     if (path === '/api/files' && method === 'POST') {
-      return mockUpload.single('document')(req, res, (err) => {
+      return mockUpload.single('file')(req, res, (err) => {
         if (err) return res.status(400).json({ success: false, message: err.message });
         const { projectId, fileName } = req.body;
         let fileUrl = '';
