@@ -1,0 +1,15 @@
+const express = require('express');
+const router = express.Router();
+const { addFile, getFiles } = require('../controllers/fileController');
+const { protect } = require('../middleware/authMiddleware');
+const { authorize } = require('../middleware/roleMiddleware');
+const { verifyProjectAccess } = require('../middleware/projectAccess');
+const { upload } = require('../config/cloudinary');
+
+router.route('/')
+  .post(protect, authorize('admin'), verifyProjectAccess, upload.single('file'), addFile);
+
+router.route('/project/:projectId')
+  .get(protect, verifyProjectAccess, getFiles);
+
+module.exports = router;

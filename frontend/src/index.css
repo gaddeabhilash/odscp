@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900 font-sans antialiased;
+  }
+}
+
+@layer components {
+  .sidebar-link {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900;
+  }
+  .sidebar-link.active {
+    @apply bg-indigo-50 text-indigo-700;
+  }
+}
