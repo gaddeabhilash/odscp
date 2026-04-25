@@ -15,6 +15,7 @@ const addFile = asyncHandler(async (req, res) => {
 
   const fileUrl = req.file.path;
   const filePublicId = req.file.filename;
+  const resourceType = req.file.resource_type || 'image';
   const fileName = req.file.originalname || 'Uploaded File';
 
   const newFile = await FileModel.create({
@@ -22,6 +23,7 @@ const addFile = asyncHandler(async (req, res) => {
     fileName,
     fileUrl,
     filePublicId,
+    resourceType,
   });
 
   const populatedFile = await newFile.populate('projectId', 'projectName');
@@ -52,7 +54,38 @@ const getFiles = asyncHandler(async (req, res) => {
   });
 });
 
+const { cloudinary } = require('../config/cloudinary');
+
+// @desc    Delete a file
+// @route   DELETE /api/files/:id
+// @access  Private/Admin
+const deleteFile = asyncHandler(async (req, res) => {
+  const fileId = req.params.id;
+  const fileItem = await FileModel.findById(fileId);
+
+  if (!fileItem) {
+    res.status(404);
+    throw new Error('Document not found');
+  }
+
+  // Delete from Cloudinary if public ID exists
+  if (fileItem.filePublicId) {
+    await cloudinary.uploader.destroy(fileItem.filePublicId, {
+      resource_type: fileItem.resourceType || 'image'
+    });
+  }
+
+  await fileItem.deleteOne();
+
+  res.status(200).json({ 
+    success: true, 
+    message: 'Document purged successfully',
+    id: fileId 
+  });
+});
+
 module.exports = {
   addFile,
   getFiles,
+  deleteFile,
 };

@@ -10,7 +10,7 @@ router
   .post(protect, authorize('admin'), createUser);
 
 router.route('/:id')
-  .patch(protect, authorize('admin'), updateUser)
+  .put(protect, authorize('admin'), updateUser)
   .delete(protect, authorize('admin'), deleteUser);
 
 module.exports = router;

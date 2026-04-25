@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { getProjects, getFiles } from '../../services/projectService';
 import { Card } from '../../components/ui/Card';
-import { FileText, Download, ExternalLink, Search, FolderOpen, ChevronDown } from 'lucide-react';
+import { FileText, Download, ExternalLink, Search, FolderOpen, ChevronDown, Phone, MessageCircle, RefreshCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useLocation } from 'react-router-dom';
 
@@ -12,6 +12,7 @@ export default function Files() {
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
   const location = useLocation();
 
@@ -25,7 +26,6 @@ export default function Files() {
         if (userProjects.length > 0) {
           const params = new URLSearchParams(location.search);
           const urlPid = params.get('projectId');
-          
           const initialPid = (urlPid && userProjects.some(p => p._id === urlPid)) 
             ? urlPid 
             : userProjects[0]._id;
@@ -35,7 +35,6 @@ export default function Files() {
         }
       } catch (err) {
         console.error('Failed to load shared artifacts', err);
-        toast.error('Terminal error: Failed to retrieve shared assets');
       } finally {
         setLoading(false);
       }
@@ -44,11 +43,16 @@ export default function Files() {
   }, [user._id, location.search]);
 
   const fetchProjectFiles = async (pid) => {
+    if (!pid) return;
+    setRefreshing(true);
     try {
       const filesRes = await getFiles(pid);
       setFiles(filesRes.data || []);
+      if (refreshing) toast.success('Document sync complete');
     } catch (err) {
-      console.error('Failed to load files', err);
+      toast.error('Failed to sync documents');
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -78,100 +82,82 @@ export default function Files() {
   const selectedProject = projects.find(p => p._id === selectedProjectId);
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4 md:px-0 animate-in slide-in-from-bottom-4 duration-500">
+    <div className="max-w-4xl mx-auto py-8 px-4 md:px-0 animate-in slide-in-from-bottom-4 duration-500 pb-32">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-gray-100 pb-8 mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight uppercase">Document Archive</h1>
-          <p className="text-gray-500 mt-2">Access blueprints, quotations, and official project documentation.</p>
+          <p className="text-gray-500 mt-2 font-medium">Official blueprints, quotations, and project reports.</p>
         </div>
         
-        <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto items-end">
+           <button 
+            onClick={() => fetchProjectFiles(selectedProjectId)}
+            className={`p-2.5 bg-gray-50 text-gray-400 hover:text-indigo-600 rounded-xl hover:bg-indigo-50 transition-all mb-0.5 ${refreshing ? 'animate-spin' : ''}`}
+            title="Force Refresh"
+          >
+            <RefreshCcw size={20} />
+          </button>
           {projects.length > 1 && (
             <div className="relative group w-full sm:w-64">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Switch Project</label>
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Switch Stream</label>
               <div className="relative">
                 <select
                   value={selectedProjectId}
                   onChange={handleProjectChange}
-                  className="w-full pl-4 pr-10 py-2.5 bg-gray-50 border-2 border-transparent rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition-all font-bold text-xs tracking-wider appearance-none cursor-pointer"
+                  className="w-full pl-4 pr-10 py-2.5 bg-white border-2 border-gray-100 rounded-xl focus:outline-none focus:border-indigo-500 transition-all font-bold text-xs tracking-wider appearance-none cursor-pointer"
                 >
                   {projects.map(p => (
                     <option key={p._id} value={p._id}>{p.projectName.toUpperCase()}</option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none group-focus-within:text-indigo-500" size={16} />
               </div>
             </div>
           )}
-
-          <div className="relative group w-full sm:w-64">
-            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Filter Artifacts</label>
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
-              <input 
-                type="text" 
-                placeholder="SEARCH ARCHIVE..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-2 border-transparent rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition-all font-bold text-xs tracking-wider text-gray-800"
-              />
-            </div>
-          </div>
         </div>
       </div>
 
-      {selectedProject && (
-        <div className="mb-8 flex items-center gap-3 bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100">
-          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black">
-            {selectedProject.projectName[0].toUpperCase()}
-          </div>
-          <div>
-            <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest leading-none">Showing Documents for</p>
-            <p className="text-sm font-black text-indigo-900 uppercase mt-1">{selectedProject.projectName}</p>
-          </div>
-        </div>
-      )}
+      <div className="mb-8 relative group">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors" size={20} />
+        <input
+          type="text"
+          placeholder="FILTER BY FILENAME..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="w-full pl-12 pr-4 py-4 bg-white border-2 border-gray-100 rounded-2xl focus:outline-none focus:border-indigo-500 transition-all font-bold text-xs tracking-widest text-gray-800"
+        />
+      </div>
 
       {filteredFiles.length === 0 ? (
         <Card className="p-20 text-center border-dashed border-2 bg-gray-50/50">
           <FolderOpen className="mx-auto mb-4 text-gray-300" size={48} />
-          <p className="font-bold text-gray-400 uppercase tracking-widest text-sm">No artifacts deployed</p>
-          <p className="text-xs text-gray-400 mt-2">Shared files will appear here as the project matures.</p>
+          <p className="font-bold text-gray-500 uppercase tracking-widest text-sm">No files identified</p>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-4">
+        <div className="space-y-4">
           {filteredFiles.map((file) => (
-            <Card key={file._id} className="p-5 hover:shadow-lg hover:-translate-y-0.5 transition-all border-gray-100/80 group">
+            <Card key={file._id} className="p-5 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-gray-100 group">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-5">
-                  <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
+                  <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-500">
                     <FileText size={24} />
                   </div>
                   <div>
-                    <h3 className="font-black text-gray-900 uppercase tracking-tight text-sm leading-none">{file.fileName}</h3>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mt-2">
-                      Deployed on {new Date(file.createdAt).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
-                    </p>
+                    <h3 className="font-black text-gray-900 uppercase tracking-tight text-sm mb-1">{file.fileName}</h3>
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                       Shared {new Date(file.createdAt).toLocaleDateString()}
+                    </span>
                   </div>
                 </div>
                 
                 <div className="flex gap-2">
-                  <a 
-                    href={file.fileUrl} 
-                    target="_blank" 
+                  <a
+                    href={`${file.fileUrl}${file.fileUrl.includes('?') ? '&' : '?'}cb=${Date.now()}`}
+                    target="_blank"
                     rel="noreferrer"
-                    className="p-3 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
-                    title="View Source"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-xl hover:bg-indigo-600 transition-all text-[10px] font-black uppercase tracking-widest shadow-lg active:scale-95"
                   >
-                    <ExternalLink size={20} />
-                  </a>
-                  <a 
-                    href={file.fileUrl} 
-                    download 
-                    className="p-3 bg-gray-900 text-white rounded-xl hover:bg-indigo-600 transition-all shadow-sm hover:shadow-lg flex items-center gap-2 px-5"
-                  >
-                    <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">Fetch File</span>
-                    <Download size={18} />
+                    <Download size={14} /> Download
                   </a>
                 </div>
               </div>
@@ -180,17 +166,30 @@ export default function Files() {
         </div>
       )}
 
-      <div className="mt-12 p-6 bg-indigo-900 rounded-3xl text-white relative overflow-hidden group">
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div>
-            <h4 className="text-xl font-black uppercase tracking-tight">Need specific assets?</h4>
-            <p className="text-indigo-200 text-sm mt-1">Request custom exports or higher resolution blueprints from your project lead.</p>
-          </div>
-          <button className="bg-white text-indigo-900 px-8 py-3 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-indigo-100 transition-colors shadow-xl">
-            Contact Team
-          </button>
+      {/* QUICK CONTACT SECTION (AS REQUESTED) */}
+      <div className="mt-24 border-t border-gray-100 pt-16">
+        <div className="text-center mb-10">
+          <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Need Assistance?</h2>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-2">Connect with our team for immediate project support.</p>
         </div>
-        <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+           {[
+            { name: "Support Line 1", phone: "9398801834" },
+            { name: "Support Line 2", phone: "7993107169" }
+          ].map((contact, idx) => (
+            <Card key={idx} className="p-6 border-gray-100 hover:shadow-xl transition-all">
+              <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-3">{contact.name}</p>
+              <div className="flex gap-2">
+                <a href={`tel:${contact.phone}`} className="flex-1 bg-gray-900 text-white py-3 rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest">
+                  <Phone size={12} /> Call
+                </a>
+                <a href={`https://wa.me/91${contact.phone}`} target="_blank" rel="noreferrer" className="flex-1 bg-emerald-500 text-white py-3 rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest">
+                  <MessageCircle size={12} /> WhatsApp
+                </a>
+              </div>
+            </Card>
+          ))}
+        </div>
       </div>
     </div>
   );

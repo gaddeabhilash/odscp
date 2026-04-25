@@ -17,6 +17,6 @@ router.route('/client/:clientId')
   .get(protect, getProjects);
 
 router.route('/:id')
-  .patch(protect, authorize('admin'), updateProject);
+  .put(protect, authorize('admin'), updateProject);
 
 module.exports = router;

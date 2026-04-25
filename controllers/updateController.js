@@ -101,8 +101,33 @@ const deleteUpdate = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Update an existing update
+// @route   PATCH /api/updates/:id
+// @access  Private/Admin
+const updateUpdate = asyncHandler(async (req, res) => {
+  const updateItem = await Update.findById(req.params.id);
+
+  if (!updateItem) {
+    res.status(404);
+    throw new Error('Update not found');
+  }
+
+  // Update fields
+  if (req.body.title) updateItem.title = req.body.title;
+  if (req.body.description) updateItem.description = req.body.description;
+
+  const updatedUpdate = await updateItem.save();
+
+  res.status(200).json({
+    success: true,
+    message: 'Update modified successfully',
+    data: updatedUpdate,
+  });
+});
+
 module.exports = {
   createUpdate,
   getUpdates,
+  updateUpdate,
   deleteUpdate,
 };

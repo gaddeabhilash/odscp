@@ -19,6 +19,10 @@ const fileSchema = new mongoose.Schema(
       type: String, // For deletion
       required: true,
     },
+    resourceType: {
+      type: String, // 'image', 'video', or 'raw'
+      default: 'image',
+    },
   },
   {
     timestamps: true,

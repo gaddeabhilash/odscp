@@ -86,7 +86,7 @@ export default function ManageClients() {
   const handleSaveEdit = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.patch(`/users/${editingUser._id}`, editForm);
+      const res = await api.put(`/users/${editingUser._id}`, editForm);
       toast.success('User updated successfully');
       setUsers(prev => prev.map(u => u._id === editingUser._id ? { ...u, ...res.data.data } : u));
       setEditingUser(null);

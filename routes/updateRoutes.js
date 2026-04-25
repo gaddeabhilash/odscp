@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { createUpdate, getUpdates, deleteUpdate } = require('../controllers/updateController');
+const { createUpdate, getUpdates, updateUpdate, deleteUpdate } = require('../controllers/updateController');
 const { protect } = require('../middleware/authMiddleware');
 const { authorize } = require('../middleware/roleMiddleware');
 const { verifyProjectAccess } = require('../middleware/projectAccess');
@@ -13,6 +13,7 @@ router.route('/project/:projectId')
   .get(protect, verifyProjectAccess, getUpdates);
 
 router.route('/:id')
+  .patch(protect, authorize('admin'), updateUpdate)
   .delete(protect, authorize('admin'), deleteUpdate);
 
 module.exports = router;

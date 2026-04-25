@@ -15,6 +15,7 @@ const ManageProjects = lazy(() => import('../pages/admin/ManageProjects'));
 const ManageClients = lazy(() => import('../pages/admin/ManageClients'));
 const Files = lazy(() => import('../pages/client/Files'));
 const UploadUpdate = lazy(() => import('../pages/admin/UploadUpdate'));
+const Contact = lazy(() => import('../pages/shared/Contact'));
 
 // Centralized Suspense loader
 const FallbackLoader = () => (
@@ -87,6 +88,12 @@ const AppRoutes = () => {
               <ProtectedRoute role={ROLES.CLIENT}>
                 <Suspense fallback={<InnerLoader />}><Files /></Suspense>
               </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/contact"
+            element={
+              <Suspense fallback={<InnerLoader />}><Contact /></Suspense>
             }
           />
 

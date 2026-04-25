@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, Home, Clock, Folder, Users, LayoutDashboard, Menu, X as CloseIcon } from 'lucide-react';
+import { LogOut, Home, Clock, Folder, Users, LayoutDashboard, Menu, MessageSquare, X as CloseIcon } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
 export const AppLayout = () => {
@@ -18,12 +18,14 @@ export const AppLayout = () => {
     { name: 'Overview', path: '/dashboard', icon: <Home size={20} /> },
     { name: 'Timeline', path: '/timeline', icon: <Clock size={20} /> },
     { name: 'Files', path: '/files', icon: <Folder size={20} /> },
+    { name: 'Contact Team', path: '/contact', icon: <MessageSquare size={20} /> },
   ];
 
   const adminLinks = [
     { name: 'Dashboard', path: '/admin/dashboard', icon: <LayoutDashboard size={20} /> },
     { name: 'Clients', path: '/admin/clients', icon: <Users size={20} /> },
     { name: 'Projects', path: '/admin/projects', icon: <Folder size={20} /> },
+    { name: 'Contact Center', path: '/contact', icon: <MessageSquare size={20} /> },
   ];
 
   const links = user?.role === 'admin' ? adminLinks : clientLinks;
