@@ -3,7 +3,7 @@ const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
 
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
+  return jwt.sign({ id }, process.env.JWT_SECRET || 'default_odscp_secret_key_change_me_in_prod', {
     expiresIn: '30d',
   });
 };
