@@ -13,12 +13,17 @@ const app = express();
 
 // Base Middlewares
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['http://localhost:5173', 'http://127.0.0.1:5173'],
   credentials: true
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(morgan('dev')); // Logging middleware
+
+// Root Route
+app.get('/', (req, res) => {
+  res.send('ODSCP API is running...');
+});
 
 // Mock API Middleware (Intersects requests if USE_MOCK_DB is true)
 if (process.env.USE_MOCK_DB === 'true') {
