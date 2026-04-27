@@ -6,7 +6,7 @@ import { Clock, Image as ImageIcon, FileText, Video, ChevronDown, Phone, Message
 import { useLocation } from 'react-router-dom';
 
 export default function Timeline() {
-  const { user } = useAuthStore();
+  const { user, token } = useAuthStore();
   const [projects, setProjects] = useState([]);
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [updates, setUpdates] = useState([]);
@@ -133,17 +133,19 @@ export default function Timeline() {
                              <p className="text-sm font-bold truncate max-w-[200px] md:max-w-xs">{update.title}</p>
                            </div>
                          </div>
-                         <a 
-                           href={update.mediaUrl}
-                           target="_blank" 
-                           rel="noreferrer"
+                          <button 
+                           onClick={() => window.open(`/api/updates/${update._id}/download?token=${token}`, '_blank')}
                            className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all border border-white/10"
                          >
                            <Download size={20} className="text-white" />
-                         </a>
+                         </button>
                       </div>
                     ) : (
-                      <img src={update.mediaUrl} alt={update.title} className="w-full h-auto max-h-[500px] object-contain transition-transform duration-700" />
+                      <img 
+                        src={update.mediaUrl} 
+                        alt={update.title} 
+                        className="w-full h-auto max-h-[400px] object-cover transition-transform duration-700 hover:scale-105" 
+                      />
                     )}
                   </div>
                 )}

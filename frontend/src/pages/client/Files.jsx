@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import { useLocation } from 'react-router-dom';
 
 export default function Files() {
-  const { user } = useAuthStore();
+  const { user, token } = useAuthStore();
   const [projects, setProjects] = useState([]);
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [files, setFiles] = useState([]);
@@ -151,14 +151,12 @@ export default function Files() {
                 </div>
                 
                 <div className="flex gap-2">
-                  <a
-                    href={file.fileUrl}
-                    target="_blank"
-                    rel="noreferrer"
+                  <button
+                    onClick={() => window.open(`/api/files/${file._id}/download?token=${token}`, '_blank')}
                     className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-xl hover:bg-indigo-600 transition-all text-[10px] font-black uppercase tracking-widest shadow-lg active:scale-95"
                   >
                     <Download size={14} /> Download
-                  </a>
+                  </button>
                 </div>
               </div>
             </Card>

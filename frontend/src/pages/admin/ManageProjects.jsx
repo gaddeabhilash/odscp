@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../../store/authStore';
 
 const STATUS_OPTIONS = ['Planning', 'Design', 'Execution', 'In Progress', 'Review', 'Completed'];
 
@@ -20,6 +21,7 @@ export default function ManageProjects() {
   const navigate = useNavigate();
 
   // Modals & Drawers
+  const { token } = useAuthStore();
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProject, setEditingProject] = useState(null); 
   const [selectedProject, setSelectedProject] = useState(null); 
@@ -199,10 +201,9 @@ export default function ManageProjects() {
     }
   };
 
-  const handleDownload = (fileUrl, fileName) => {
+  const handleDownload = (fileId, fileName) => {
     toast.success(`Opening: ${fileName}`);
-    const safeUrl = fileUrl;
-    window.open(safeUrl, '_blank');
+    window.open(`/api/files/${fileId}/download?token=${token}`, '_blank');
   };
 
   const filteredProjects = projects.filter(p =>
@@ -411,9 +412,12 @@ export default function ManageProjects() {
                                       <FileText size={24} className="text-indigo-400" />
                                       <span className="text-xs font-bold truncate max-w-[200px]">Document Attachment</span>
                                     </div>
-                                    <a href={update.mediaUrl} target="_blank" rel="noreferrer" className="p-2 hover:bg-white/10 rounded-lg">
+                                    <button 
+                                      onClick={() => window.open(`/api/updates/${update._id}/download?token=${token}`, '_blank')}
+                                      className="p-2 hover:bg-white/10 rounded-lg"
+                                    >
                                       <Download size={18} />
-                                    </a>
+                                    </button>
                                   </div>
                                 ) : (
                                   <img src={update.mediaUrl} alt={update.title} className="w-full max-h-[500px] object-contain" />
@@ -445,14 +449,12 @@ export default function ManageProjects() {
                             </div>
                           </div>
                         <div className="flex gap-1">
-                          <a 
-                            href={file.fileUrl}
-                            target="_blank"
-                            rel="noreferrer"
+                          <button 
+                            onClick={() => handleDownload(file._id, file.fileName)}
                             className="flex items-center gap-2 px-3 py-2 bg-gray-900 text-white rounded-lg hover:bg-indigo-600 transition-all text-[10px] font-black uppercase tracking-widest shadow-sm"
                           >
                             <Download size={14} /> Download
-                          </a>
+                          </button>
 
                           <button 
                             onClick={() => handleDeleteFile(file._id)}

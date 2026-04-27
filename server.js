@@ -11,6 +11,11 @@ dotenv.config();
 
 const app = express();
 
+app.use((req, res, next) => {
+  console.log(`[Master Trace] ${req.method} ${req.url}`);
+  next();
+});
+
 // Base Middlewares
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
   ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()) 

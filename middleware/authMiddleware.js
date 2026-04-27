@@ -3,15 +3,16 @@ const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
 
 const protect = asyncHandler(async (req, res, next) => {
+  console.log(`[Auth] Incoming request: ${req.method} ${req.url}`);
   let token;
 
   if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
+    (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) ||
+    req.query.token
   ) {
     try {
-      // Get token from header
-      token = req.headers.authorization.split(' ')[1];
+      // Get token from header or query
+      token = req.query.token || req.headers.authorization.split(' ')[1];
 
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default_odscp_secret_key_change_me_in_prod');

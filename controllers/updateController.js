@@ -1,7 +1,8 @@
 const asyncHandler = require('express-async-handler');
+const https = require('https');
 const Update = require('../models/Update');
 const FileModel = require('../models/File');
-const { cloudinary } = require('../config/cloudinary');
+const { cloudinary, getSignedUrl } = require('../config/cloudinary');
 
 // @desc    Create project update
 // @route   POST /api/updates
@@ -79,6 +80,21 @@ const getUpdates = asyncHandler(async (req, res) => {
     .limit(limit)
     .sort('-createdAt');
 
+  // Generate signed URLs for all media to bypass Cloudinary security restrictions
+  const updatesWithSignedUrls = await Promise.all(updates.map(async (update) => {
+    const updateObj = update.toObject();
+    if (update.mediaUrl && update.mediaPublicId) {
+      // Map mediaType to Cloudinary resource_type
+      let resourceType = 'image';
+      if (update.mediaType === 'video') resourceType = 'video';
+      if (update.mediaType === 'document') resourceType = 'raw';
+      // Use transformation for images only to ensure they are optimized without breaking signatures
+      const transformation = resourceType === 'image' ? 'q_auto,f_auto,w_800,c_limit' : null;
+      updateObj.mediaUrl = await getSignedUrl(update.mediaPublicId, resourceType, transformation);
+    }
+    return updateObj;
+  }));
+
   res.status(200).json({
     success: true,
     message: 'Updates fetched successfully',
@@ -86,7 +102,7 @@ const getUpdates = asyncHandler(async (req, res) => {
     total,
     page,
     totalPages: Math.ceil(total / limit),
-    data: updates,
+    data: updatesWithSignedUrls,
   });
 });
 
@@ -104,9 +120,13 @@ const deleteUpdate = asyncHandler(async (req, res) => {
 
   // Delete media from Cloudinary if exists
   if (updateItem.mediaPublicId) {
-    await cloudinary.uploader.destroy(updateItem.mediaPublicId, {
-      resource_type: updateItem.mediaType === 'video' ? 'video' : 'image',
-    });
+    try {
+      await cloudinary.uploader.destroy(updateItem.mediaPublicId, {
+        resource_type: updateItem.mediaType === 'video' ? 'video' : 'image',
+      });
+    } catch (err) {
+      console.log(`[Delete Update] Media not found or failed: ${err.message}`);
+    }
   }
 
   await updateItem.deleteOne();
@@ -142,9 +162,96 @@ const updateUpdate = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Proxy download from Cloudinary to bypass security issues
+// @route   GET /api/updates/:id/download
+// @access  Private
+const downloadProxy = asyncHandler(async (req, res) => {
+  const update = await Update.findById(req.params.id);
+  if (!update || !update.mediaUrl) {
+    res.status(404);
+    throw new Error('Media not found');
+  }
+
+  // Get the signed URL
+  let resourceType = 'image';
+  if (update.mediaType === 'video') resourceType = 'video';
+  if (update.mediaType === 'document') resourceType = 'raw';
+  
+  const signedUrl = await getSignedUrl(update.mediaPublicId, resourceType);
+  console.log(`[Proxy] Attempting to fetch update media: ${signedUrl}`);
+
+  const tryFetch = async (urlVariation, index) => {
+    // 1. Fetch definitive details from Admin API on the first attempt
+    if (index === 0) {
+      console.log(`[Proxy Update] Deep Probing: ${update.mediaPublicId}`);
+      const probeTypes = (resourceType === 'raw' || resourceType === 'image') ? ['raw', 'image'] : [resourceType];
+      let found = false;
+
+      for (const pType of probeTypes) {
+        try {
+          const details = await cloudinary.api.resource(update.mediaPublicId, { resource_type: pType });
+          update.version = details.version;
+          update.type = details.type;
+          update.actualResourceType = pType;
+          console.log(`[Proxy Update] Confirmed Version: ${update.version}, Type: ${update.type}, Res: ${pType}`);
+          found = true;
+          break;
+        } catch (err) {
+          console.log(`[Proxy Update] Probe as ${pType} failed: ${err.message}`);
+        }
+      }
+      
+      if (!found) {
+        console.log(`[Proxy Update] All probes failed, using defaults`);
+      }
+    }
+
+    console.log(`[Proxy Update] Trying Variation ${index}: ${urlVariation}`);
+    https.get(urlVariation, (cloudinaryRes) => {
+      if (cloudinaryRes.statusCode === 200) {
+        console.log(`[Proxy Update] Success with Variation ${index}`);
+        res.setHeader('Content-Type', cloudinaryRes.headers['content-type'] || 'application/octet-stream');
+        res.setHeader('Content-Disposition', `attachment; filename="${update.title || 'media'}.${resourceType === 'video' ? 'mp4' : 'pdf'}"`);
+        return cloudinaryRes.pipe(res);
+      }
+
+      console.log(`[Proxy Update] Variation ${index} failed: ${cloudinaryRes.statusCode}`);
+      
+      const v = update.version || '1';
+      const t = update.type || 'upload';
+      const r = update.actualResourceType || resourceType;
+
+      const variations = [
+        cloudinary.url(update.mediaPublicId, { resource_type: r, type: t, version: v, sign_url: true, secure: true }),
+        cloudinary.url(update.mediaPublicId, { resource_type: r, type: t, sign_url: true, secure: true }), // No version
+        cloudinary.utils.private_download_url(update.mediaPublicId, '', { resource_type: r, type: 'authenticated', secure: true }),
+        cloudinary.utils.private_download_url(update.mediaPublicId, '', { resource_type: r, type: 'upload', secure: true }),
+        cloudinary.url(update.mediaPublicId, { resource_type: 'image', type: t, version: v, sign_url: true, secure: true }),
+        cloudinary.url(update.mediaPublicId.replace(/\.pdf$/i, ''), { resource_type: 'image', type: t, version: v, sign_url: true, secure: true }),
+        cloudinary.url(update.mediaPublicId, { resource_type: r, type: 'authenticated', sign_url: true, secure: true }),
+        cloudinary.url(update.mediaPublicId, { resource_type: r, type: 'private', sign_url: true, secure: true }),
+      ];
+
+      if (index < variations.length) {
+        tryFetch(variations[index], index + 1);
+      } else {
+        res.status(cloudinaryRes.statusCode || 401).json({ 
+          message: 'Failed to fetch media from all available storage paths',
+          error: cloudinaryRes.statusMessage
+        });
+      }
+    }).on('error', (err) => {
+      res.status(500).json({ message: 'Stream error', error: err.message });
+    });
+  };
+
+  tryFetch(signedUrl, 0);
+});
+
 module.exports = {
   createUpdate,
   getUpdates,
   updateUpdate,
   deleteUpdate,
+  downloadProxy,
 };
