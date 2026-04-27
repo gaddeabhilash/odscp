@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { getProjects, getUpdates } from '../../services/projectService';
+import { getDownloadUrl } from '../../api/axios';
 import { Card } from '../../components/ui/Card';
 import { Clock, Image as ImageIcon, FileText, Video, ChevronDown, Phone, MessageCircle, Download } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
@@ -134,7 +135,7 @@ export default function Timeline() {
                            </div>
                          </div>
                           <button 
-                           onClick={() => window.open(`/api/updates/${update._id}/download?token=${token}`, '_blank')}
+                           onClick={() => window.open(getDownloadUrl(`updates/${update._id}/download?token=${token}`), '_blank')}
                            className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all border border-white/10"
                          >
                            <Download size={20} className="text-white" />

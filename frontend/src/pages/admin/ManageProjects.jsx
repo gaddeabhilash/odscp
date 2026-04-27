@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import api from '../../api/axios';
+import api, { getDownloadUrl } from '../../api/axios';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -203,7 +203,7 @@ export default function ManageProjects() {
 
   const handleDownload = (fileId, fileName) => {
     toast.success(`Opening: ${fileName}`);
-    window.open(`/api/files/${fileId}/download?token=${token}`, '_blank');
+    window.open(getDownloadUrl(`files/${fileId}/download?token=${token}`), '_blank');
   };
 
   const filteredProjects = projects.filter(p =>
@@ -413,7 +413,7 @@ export default function ManageProjects() {
                                       <span className="text-xs font-bold truncate max-w-[200px]">Document Attachment</span>
                                     </div>
                                     <button 
-                                      onClick={() => window.open(`/api/updates/${update._id}/download?token=${token}`, '_blank')}
+                                      onClick={() => window.open(getDownloadUrl(`updates/${update._id}/download?token=${token}`), '_blank')}
                                       className="p-2 hover:bg-white/10 rounded-lg"
                                     >
                                       <Download size={18} />

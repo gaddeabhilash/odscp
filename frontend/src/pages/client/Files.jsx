@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { getProjects, getFiles } from '../../services/projectService';
+import { getDownloadUrl } from '../../api/axios';
 import { Card } from '../../components/ui/Card';
 import { FileText, Download, ExternalLink, Search, FolderOpen, ChevronDown, Phone, MessageCircle, RefreshCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -152,7 +153,7 @@ export default function Files() {
                 
                 <div className="flex gap-2">
                   <button
-                    onClick={() => window.open(`/api/files/${file._id}/download?token=${token}`, '_blank')}
+                    onClick={() => window.open(getDownloadUrl(`files/${file._id}/download?token=${token}`), '_blank')}
                     className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-xl hover:bg-indigo-600 transition-all text-[10px] font-black uppercase tracking-widest shadow-lg active:scale-95"
                   >
                     <Download size={14} /> Download
