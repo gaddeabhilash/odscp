@@ -61,9 +61,9 @@ export default function UploadUpdate() {
   const validateAndSetFile = (selectedFile) => {
     if (!selectedFile) return;
     
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/quicktime'];
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/quicktime', 'application/pdf'];
     if (!validTypes.includes(selectedFile.type)) {
-      toast.error('Invalid format. Use JPG, PNG, or MP4.');
+      toast.error('Invalid format. Use JPG, PNG, MP4, or PDF.');
       return;
     }
 
@@ -174,7 +174,7 @@ export default function UploadUpdate() {
                   ref={fileInputRef} 
                   className="hidden" 
                   onChange={handleFileSelect}
-                  accept="image/*,video/mp4,video/quicktime"
+                  accept="image/*,video/mp4,video/quicktime,application/pdf"
                 />
                 <div className="bg-white p-5 rounded-full shadow-sm border border-gray-100 mb-5 relative group-hover:scale-110 transition-transform">
                   <UploadCloud size={32} className="text-indigo-600" />
@@ -188,6 +188,11 @@ export default function UploadUpdate() {
               <div className="relative rounded-3xl overflow-hidden bg-gray-900 flex flex-col items-center justify-center shadow-inner group">
                 {preview.type.startsWith('video') ? (
                   <video src={preview.url} controls className="max-h-[500px] w-full bg-black" />
+                ) : preview.type === 'application/pdf' ? (
+                  <div className="flex flex-col items-center justify-center py-20 bg-gray-900 w-full h-[400px]">
+                    <FileText size={80} className="text-indigo-400 mb-4" />
+                    <p className="text-white font-bold uppercase tracking-widest text-sm">PDF Document Ready</p>
+                  </div>
                 ) : (
                   <img src={preview.url} alt="Preview" className="max-h-[500px] w-full object-contain" />
                 )}
@@ -203,7 +208,13 @@ export default function UploadUpdate() {
                 </div>
                 
                 <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md text-white px-4 py-2 rounded-xl text-sm font-semibold tracking-wide flex items-center gap-2 border border-white/10">
-                  {preview.type.startsWith('video') ? <FileVideo size={18} className="text-indigo-400" /> : <ImageIcon size={18} className="text-emerald-400" />}
+                  {preview.type.startsWith('video') ? (
+                    <FileVideo size={18} className="text-indigo-400" />
+                  ) : preview.type === 'application/pdf' ? (
+                    <FileText size={18} className="text-amber-400" />
+                  ) : (
+                    <ImageIcon size={18} className="text-emerald-400" />
+                  )}
                   {file.name}
                 </div>
               </div>

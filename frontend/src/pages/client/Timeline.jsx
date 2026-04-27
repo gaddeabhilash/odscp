@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { getProjects, getUpdates } from '../../services/projectService';
 import { Card } from '../../components/ui/Card';
-import { Clock, Image as ImageIcon, FileText, Video, ChevronDown, Phone, MessageCircle } from 'lucide-react';
+import { Clock, Image as ImageIcon, FileText, Video, ChevronDown, Phone, MessageCircle, Download } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 
 export default function Timeline() {
@@ -103,7 +103,7 @@ export default function Timeline() {
           {updates.map((update) => (
             <div key={update._id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
               <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-indigo-50 text-indigo-600 shadow-sm shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 ml-0 md:mx-auto transition-transform hover:scale-110">
-                {update.mediaType === 'video' ? <Video size={16} /> : <ImageIcon size={16} />}
+                {update.mediaType === 'video' ? <Video size={16} /> : update.mediaType === 'document' ? <FileText size={16} /> : <ImageIcon size={16} />}
               </div>
               
               <Card className="w-[calc(100%-4rem)] md:w-[calc(50%-3rem)] p-5 hover:shadow-xl transition-all duration-300 border-gray-100">
@@ -124,6 +124,24 @@ export default function Timeline() {
                   <div className="mt-4 rounded-xl overflow-hidden bg-gray-50 border border-gray-100 shadow-sm group-hover:shadow-md transition-shadow">
                     {update.mediaType === 'video' ? (
                       <video src={update.mediaUrl} controls className="w-full h-auto max-h-[500px] object-contain" />
+                    ) : update.mediaType === 'document' ? (
+                      <div className="flex items-center justify-between p-6 bg-gray-900 text-white group-hover:bg-indigo-950 transition-colors">
+                         <div className="flex items-center gap-4">
+                           <FileText className="text-indigo-400" size={32} />
+                           <div>
+                             <p className="text-xs font-black uppercase tracking-widest text-indigo-200 mb-1">Shared Document</p>
+                             <p className="text-sm font-bold truncate max-w-[200px] md:max-w-xs">{update.title}</p>
+                           </div>
+                         </div>
+                         <a 
+                           href={update.mediaUrl}
+                           target="_blank" 
+                           rel="noreferrer"
+                           className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all border border-white/10"
+                         >
+                           <Download size={20} className="text-white" />
+                         </a>
+                      </div>
                     ) : (
                       <img src={update.mediaUrl} alt={update.title} className="w-full h-auto max-h-[500px] object-contain transition-transform duration-700" />
                     )}

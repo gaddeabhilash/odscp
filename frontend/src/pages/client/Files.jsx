@@ -152,7 +152,7 @@ export default function Files() {
                 
                 <div className="flex gap-2">
                   <a
-                    href={`${file.fileUrl}${file.fileUrl.includes('?') ? '&' : '?'}cb=${Date.now()}`}
+                    href={file.fileUrl}
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-xl hover:bg-indigo-600 transition-all text-[10px] font-black uppercase tracking-widest shadow-lg active:scale-95"

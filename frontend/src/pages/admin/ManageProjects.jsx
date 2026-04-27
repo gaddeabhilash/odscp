@@ -149,10 +149,11 @@ export default function ManageProjects() {
       setProjects(prev =>
         prev.map(p => p._id === editingProject._id ? { ...p, ...res.data.data } : p)
       );
-      if (selectedProject?._id === editingProject._id) {
-        setSelectedProject(prev => ({ ...prev, ...res.data.data }));
-        fetchProjectDetails(editingProject._id);
-      }
+
+      // CRITICAL FIX: Ensure the drawer is showing the project we just edited
+      setSelectedProject(prev => ({ ...prev, ...res.data.data }));
+      fetchProjectDetails(editingProject._id);
+
       setEditingProject(null);
       setEditDocFile(null);
     } catch (err) {
@@ -200,7 +201,7 @@ export default function ManageProjects() {
 
   const handleDownload = (fileUrl, fileName) => {
     toast.success(`Opening: ${fileName}`);
-    const safeUrl = `${fileUrl}${fileUrl.includes('?') ? '&' : '?'}cb=${Date.now()}`;
+    const safeUrl = fileUrl;
     window.open(safeUrl, '_blank');
   };
 
@@ -404,6 +405,16 @@ export default function ManageProjects() {
                               <div className="mt-4 rounded-xl overflow-hidden border border-gray-100 bg-gray-50">
                                 {update.mediaType === 'video' ? (
                                   <video src={update.mediaUrl} controls className="w-full max-h-[500px] object-contain" />
+                                ) : update.mediaType === 'document' ? (
+                                  <div className="flex items-center justify-between p-4 bg-gray-900 text-white">
+                                    <div className="flex items-center gap-3">
+                                      <FileText size={24} className="text-indigo-400" />
+                                      <span className="text-xs font-bold truncate max-w-[200px]">Document Attachment</span>
+                                    </div>
+                                    <a href={update.mediaUrl} target="_blank" rel="noreferrer" className="p-2 hover:bg-white/10 rounded-lg">
+                                      <Download size={18} />
+                                    </a>
+                                  </div>
                                 ) : (
                                   <img src={update.mediaUrl} alt={update.title} className="w-full max-h-[500px] object-contain" />
                                 )}
@@ -435,7 +446,7 @@ export default function ManageProjects() {
                           </div>
                         <div className="flex gap-1">
                           <a 
-                            href={`${file.fileUrl}${file.fileUrl.includes('?') ? '&' : '?'}cb=${Date.now()}`}
+                            href={file.fileUrl}
                             target="_blank"
                             rel="noreferrer"
                             className="flex items-center gap-2 px-3 py-2 bg-gray-900 text-white rounded-lg hover:bg-indigo-600 transition-all text-[10px] font-black uppercase tracking-widest shadow-sm"

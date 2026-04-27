@@ -13,10 +13,13 @@ cloudinary.config({
 // Setup multer storage for cloudinary
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: {
-    folder: 'odscp_uploads',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'mp4', 'mov', 'pdf'],
-    resource_type: 'auto', // supports video and image
+  params: async (req, file) => {
+    const isPDF = file.mimetype === 'application/pdf' || file.originalname.toLowerCase().endsWith('.pdf');
+    return {
+      folder: 'odscp_uploads',
+      resource_type: isPDF ? 'raw' : 'auto',
+      allowed_formats: isPDF ? undefined : ['jpg', 'jpeg', 'png', 'mp4', 'mov', 'webp'],
+    };
   },
 });
 

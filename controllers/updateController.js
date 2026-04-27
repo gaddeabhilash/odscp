@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const Update = require('../models/Update');
+const FileModel = require('../models/File');
 const { cloudinary } = require('../config/cloudinary');
 
 // @desc    Create project update
@@ -22,8 +23,13 @@ const createUpdate = asyncHandler(async (req, res) => {
 
   if (req.file) {
     mediaUrl = req.file.path;
-    mediaPublicId = req.file.filename; 
-    mediaType = req.file.mimetype.startsWith('video') ? 'video' : 'image';
+    mediaPublicId = req.file.filename;
+    
+    if (req.file.mimetype === 'application/pdf') {
+      mediaType = 'document';
+    } else {
+      mediaType = req.file.mimetype.startsWith('video') ? 'video' : 'image';
+    }
   }
 
   const newUpdate = await Update.create({
@@ -34,6 +40,17 @@ const createUpdate = asyncHandler(async (req, res) => {
     mediaPublicId,
     mediaType,
   });
+
+  // If it's a PDF, also add it to the File collection so it shows in "Documents"
+  if (mediaType === 'document' && req.file) {
+    await FileModel.create({
+      projectId,
+      fileName: req.file.originalname || title || 'Document Update',
+      fileUrl: mediaUrl,
+      filePublicId: mediaPublicId,
+      resourceType: 'raw', // Cloudinary treats PDFs as raw usually
+    });
+  }
 
   const populatedUpdate = await newUpdate.populate('projectId', 'projectName status');
 

@@ -15,7 +15,19 @@ const addFile = asyncHandler(async (req, res) => {
 
   const fileUrl = req.file.path;
   const filePublicId = req.file.filename;
-  const resourceType = req.file.resource_type || 'image';
+  
+  // Detect resource type accurately
+  let resourceType = req.file.resource_type;
+  if (!resourceType) {
+    if (req.file.mimetype === 'application/pdf') {
+      resourceType = 'raw';
+    } else if (req.file.mimetype.startsWith('video')) {
+      resourceType = 'video';
+    } else {
+      resourceType = 'image';
+    }
+  }
+  
   const fileName = req.file.originalname || 'Uploaded File';
 
   const newFile = await FileModel.create({
