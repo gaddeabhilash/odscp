@@ -223,8 +223,30 @@ const mockApiMiddleware = (req, res, next) => {
       });
     }
 
+    // GET /api/projects/client/:clientId/aggregate — aggregate endpoint
+    if (path.includes('/api/projects/client/') && path.endsWith('/aggregate') && method === 'GET') {
+      const clientId = path.split('/api/projects/client/')[1].replace('/aggregate', '');
+      const filteredProjects = mockData.projects.filter(
+        (p) => p._clientId === clientId || p.clientId?._id === clientId
+      );
+      
+      const projectIds = filteredProjects.map(p => p._id);
+      
+      const filteredUpdates = mockData.updates.filter(u => projectIds.includes(u.projectId));
+      const filteredFiles = mockData.files.filter(f => projectIds.includes(f.projectId));
+      
+      return res.json({
+        success: true,
+        data: {
+          projects: filteredProjects,
+          updates: filteredUpdates,
+          files: filteredFiles
+        }
+      });
+    }
+
     // GET /api/projects/client/:clientId — filter by assigned client
-    if (path.includes('/api/projects/client/')) {
+    if (path.includes('/api/projects/client/') && !path.endsWith('/aggregate')) {
       const clientId = path.split('/api/projects/client/')[1];
       const filtered = mockData.projects.filter(
         (p) => p._clientId === clientId || p.clientId?._id === clientId

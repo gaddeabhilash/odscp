@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useProjectStore } from '../../store/projectStore';
-import { getUpdates } from '../../services/projectService';
 import { getDownloadUrl } from '../../api/axios';
 import { Card } from '../../components/ui/Card';
 import { Clock, Image as ImageIcon, FileText, Video, ChevronDown, Phone, MessageCircle, Download } from 'lucide-react';
@@ -9,9 +8,8 @@ import { useLocation } from 'react-router-dom';
 
 export default function Timeline() {
   const { user, token } = useAuthStore();
-  const { projects, fetchProjects } = useProjectStore();
+  const { projects, updates: allUpdates, fetchProjects } = useProjectStore();
   const [selectedProjectId, setSelectedProjectId] = useState('');
-  const [updates, setUpdates] = useState([]);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
 
@@ -29,7 +27,6 @@ export default function Timeline() {
             : userProjects[0]._id;
           
           setSelectedProjectId(initialPid);
-          await fetchUpdates(initialPid);
         }
       } catch (err) {
         console.error('Failed to load timeline feed', err);
@@ -40,20 +37,16 @@ export default function Timeline() {
     fetchInitialData();
   }, [user._id, location.search, fetchProjects]);
 
-  const fetchUpdates = async (pid) => {
-    try {
-      const updatesRes = await getUpdates(pid);
-      setUpdates(updatesRes.data || []);
-    } catch (err) {
-      console.error('Failed to load updates', err);
-    }
+  const handleProjectChange = (e) => {
+    setSelectedProjectId(e.target.value);
   };
 
-  const handleProjectChange = (e) => {
-    const pid = e.target.value;
-    setSelectedProjectId(pid);
-    fetchUpdates(pid);
-  };
+  const updates = useMemo(() => {
+    return allUpdates.filter(u => 
+      u.projectId === selectedProjectId || 
+      (u.projectId && u.projectId._id === selectedProjectId)
+    );
+  }, [allUpdates, selectedProjectId]);
 
   if (loading) {
     return (

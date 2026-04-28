@@ -1,5 +1,8 @@
 const asyncHandler = require('express-async-handler');
 const Project = require('../models/Project');
+const Update = require('../models/Update');
+const FileModel = require('../models/File');
+const { getSignedUrl } = require('../config/cloudinary');
 
 // @desc    Create a project
 // @route   POST /api/projects
@@ -107,9 +110,75 @@ const getAllProjects = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Get aggregate data (projects, updates, files) by clientId
+// @route   GET /api/projects/client/:clientId/aggregate
+// @access  Private
+const getAggregateData = asyncHandler(async (req, res) => {
+  const { clientId } = req.params;
+
+  // Access control
+  if (req.user.role === 'client' && req.user.id !== clientId) {
+    res.status(403);
+    throw new Error('Not authorized to view these projects');
+  }
+
+  // Fetch all projects for this client
+  const projects = await Project.find({ clientId })
+    .populate('clientId', 'name email')
+    .sort('-createdAt');
+
+  const projectIds = projects.map(p => p._id);
+
+  if (projectIds.length === 0) {
+    return res.status(200).json({
+      success: true,
+      message: 'Aggregate data fetched successfully',
+      data: { projects: [], updates: [], files: [] },
+    });
+  }
+
+  // Fetch all updates and files for these projects
+  const [updates, files] = await Promise.all([
+    Update.find({ projectId: { $in: projectIds } }).populate('projectId', 'projectName clientId status progress').sort('-createdAt'),
+    FileModel.find({ projectId: { $in: projectIds } }).populate('projectId', 'projectName').sort('-createdAt')
+  ]);
+
+  // Generate signed URLs in parallel
+  const [updatesWithSignedUrls, filesWithSignedUrls] = await Promise.all([
+    Promise.all(updates.map(async (update) => {
+      const updateObj = update.toObject();
+      if (update.mediaUrl && update.mediaPublicId) {
+        let resourceType = 'image';
+        if (update.mediaType === 'video') resourceType = 'video';
+        if (update.mediaType === 'document') resourceType = 'raw';
+        const transformation = resourceType === 'image' ? 'q_auto,f_auto,w_800,c_limit' : null;
+        updateObj.mediaUrl = await getSignedUrl(update.mediaPublicId, resourceType, transformation);
+      }
+      return updateObj;
+    })),
+    Promise.all(files.map(async (file) => {
+      const fileObj = file.toObject();
+      const transformation = file.resourceType === 'image' ? 'q_auto,f_auto,w_300,c_scale' : null;
+      fileObj.fileUrl = await getSignedUrl(file.filePublicId, file.resourceType || 'auto', transformation);
+      return fileObj;
+    }))
+  ]);
+
+  res.status(200).json({
+    success: true,
+    message: 'Aggregate data fetched successfully',
+    data: {
+      projects,
+      updates: updatesWithSignedUrls,
+      files: filesWithSignedUrls
+    },
+  });
+});
+
 module.exports = {
   createProject,
   getProjects,
   updateProject,
   getAllProjects,
+  getAggregateData,
 };

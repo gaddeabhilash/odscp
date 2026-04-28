@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useProjectStore } from '../../store/projectStore';
-import { getFiles } from '../../services/projectService';
 import { getDownloadUrl } from '../../api/axios';
 import { Card } from '../../components/ui/Card';
 import { FileText, Download, ExternalLink, Search, FolderOpen, ChevronDown, Phone, MessageCircle, RefreshCcw } from 'lucide-react';
@@ -10,9 +9,8 @@ import { useLocation } from 'react-router-dom';
 
 export default function Files() {
   const { user, token } = useAuthStore();
-  const { projects, fetchProjects } = useProjectStore();
+  const { projects, files: allFiles, fetchProjects } = useProjectStore();
   const [selectedProjectId, setSelectedProjectId] = useState('');
-  const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
@@ -32,7 +30,6 @@ export default function Files() {
             : userProjects[0]._id;
           
           setSelectedProjectId(initialPid);
-          await fetchProjectFiles(initialPid);
         }
       } catch (err) {
         console.error('Failed to load shared artifacts', err);
@@ -47,9 +44,8 @@ export default function Files() {
     if (!pid) return;
     setRefreshing(true);
     try {
-      const filesRes = await getFiles(pid);
-      setFiles(filesRes.data || []);
-      if (refreshing) toast.success('Document sync complete');
+      await fetchProjects(user._id, true); // Force refresh global store
+      toast.success('Document sync complete');
     } catch (err) {
       toast.error('Failed to sync documents');
     } finally {
@@ -58,10 +54,15 @@ export default function Files() {
   };
 
   const handleProjectChange = (e) => {
-    const pid = e.target.value;
-    setSelectedProjectId(pid);
-    fetchProjectFiles(pid);
+    setSelectedProjectId(e.target.value);
   };
+
+  const files = useMemo(() => {
+    return allFiles.filter(f => 
+      f.projectId === selectedProjectId || 
+      (f.projectId && f.projectId._id === selectedProjectId)
+    );
+  }, [allFiles, selectedProjectId]);
 
   const filteredFiles = files.filter(f => 
     f.fileName.toLowerCase().includes(search.toLowerCase())

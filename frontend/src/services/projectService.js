@@ -7,6 +7,11 @@ export const getProjects = async (clientId) => {
   return res.data;
 };
 
+export const getAggregateData = async (clientId) => {
+  const res = await api.get(`/projects/client/${clientId}/aggregate`);
+  return res.data;
+};
+
 export const getUpdates = async (projectId) => {
   const res = await api.get(`/updates/project/${projectId}`);
   return res.data;

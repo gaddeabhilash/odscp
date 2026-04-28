@@ -1,8 +1,10 @@
 import { create } from 'zustand';
-import { getProjects } from '../services/projectService';
+import { getAggregateData } from '../services/projectService';
 
 export const useProjectStore = create((set, get) => ({
   projects: [],
+  updates: [],
+  files: [],
   isFetched: false,
   
   fetchProjects: async (userId, force = false) => {
@@ -12,15 +14,20 @@ export const useProjectStore = create((set, get) => ({
     }
     
     try {
-      const res = await getProjects(userId);
-      const userProjects = res.data || [];
-      set({ projects: userProjects, isFetched: true });
-      return userProjects;
+      const res = await getAggregateData(userId);
+      const data = res.data || { projects: [], updates: [], files: [] };
+      set({ 
+        projects: data.projects || [], 
+        updates: data.updates || [],
+        files: data.files || [],
+        isFetched: true 
+      });
+      return data.projects || [];
     } catch (err) {
-      console.error('Failed to fetch projects', err);
+      console.error('Failed to fetch aggregate data', err);
       return [];
     }
   },
 
-  clearProjects: () => set({ projects: [], isFetched: false })
+  clearProjects: () => set({ projects: [], updates: [], files: [], isFetched: false })
 }));
