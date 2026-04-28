@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useProjectStore } from '../../store/projectStore';
+import { getUpdates } from '../../services/projectService';
 import { getDownloadUrl } from '../../api/axios';
 import { Card } from '../../components/ui/Card';
 import { Clock, Image as ImageIcon, FileText, Video, ChevronDown, Phone, MessageCircle, Download } from 'lucide-react';
@@ -8,9 +9,11 @@ import { useLocation } from 'react-router-dom';
 
 export default function Timeline() {
   const { user, token } = useAuthStore();
-  const { projects, updates: allUpdates, fetchProjects } = useProjectStore();
+  const { projects, updates: allUpdates, fetchProjects, appendUpdates } = useProjectStore();
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -39,14 +42,35 @@ export default function Timeline() {
 
   const handleProjectChange = (e) => {
     setSelectedProjectId(e.target.value);
+    setPage(1); // Reset page on project change
   };
 
   const updates = useMemo(() => {
     return allUpdates.filter(u => 
       u.projectId === selectedProjectId || 
       (u.projectId && u.projectId._id === selectedProjectId)
-    );
+    ).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   }, [allUpdates, selectedProjectId]);
+
+  const hasMore = updates.length >= page * 20;
+
+  const loadMore = async () => {
+    if (!selectedProjectId || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const nextPage = page + 1;
+      const res = await getUpdates(selectedProjectId, nextPage, 20);
+      const newUpdates = res.data || [];
+      if (newUpdates.length > 0) {
+        appendUpdates(newUpdates);
+        setPage(nextPage);
+      }
+    } catch (err) {
+      console.error('Failed to load more updates', err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -146,6 +170,23 @@ export default function Timeline() {
               </Card>
             </div>
           ))}
+        </div>
+      )}
+
+      {hasMore && updates.length > 0 && (
+        <div className="flex justify-center mt-12">
+          <button 
+            onClick={loadMore} 
+            disabled={loadingMore}
+            className="px-8 py-3 bg-white border-2 border-gray-100 text-indigo-600 rounded-xl font-bold uppercase tracking-widest text-xs hover:border-indigo-600 hover:bg-indigo-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm"
+          >
+            {loadingMore ? (
+              <>
+                <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                Loading...
+              </>
+            ) : 'Load More Updates'}
+          </button>
         </div>
       )}
 

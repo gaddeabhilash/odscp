@@ -137,11 +137,18 @@ const getAggregateData = asyncHandler(async (req, res) => {
     });
   }
 
-  // Fetch all updates and files for these projects
-  const [updates, files] = await Promise.all([
-    Update.find({ projectId: { $in: projectIds } }).populate('projectId', 'projectName clientId status progress').sort('-createdAt'),
-    FileModel.find({ projectId: { $in: projectIds } }).populate('projectId', 'projectName').sort('-createdAt')
+  // Fetch up to 20 updates and files per project
+  const [updatesLists, filesLists] = await Promise.all([
+    Promise.all(projectIds.map(pid => 
+      Update.find({ projectId: pid }).populate('projectId', 'projectName clientId status progress').sort('-createdAt').limit(20)
+    )),
+    Promise.all(projectIds.map(pid => 
+      FileModel.find({ projectId: pid }).populate('projectId', 'projectName').sort('-createdAt').limit(20)
+    ))
   ]);
+
+  const updates = updatesLists.flat();
+  const files = filesLists.flat();
 
   // Generate signed URLs in parallel
   const [updatesWithSignedUrls, filesWithSignedUrls] = await Promise.all([

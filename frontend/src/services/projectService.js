@@ -12,12 +12,12 @@ export const getAggregateData = async (clientId) => {
   return res.data;
 };
 
-export const getUpdates = async (projectId) => {
-  const res = await api.get(`/updates/project/${projectId}`);
+export const getUpdates = async (projectId, page = 1, limit = 20) => {
+  const res = await api.get(`/updates/project/${projectId}?page=${page}&limit=${limit}`);
   return res.data;
 };
 
-export const getFiles = async (projectId) => {
-  const res = await api.get(`/files/project/${projectId}`);
+export const getFiles = async (projectId, page = 1, limit = 20) => {
+  const res = await api.get(`/files/project/${projectId}?page=${page}&limit=${limit}`);
   return res.data;
 };

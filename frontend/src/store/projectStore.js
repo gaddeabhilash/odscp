@@ -29,5 +29,18 @@ export const useProjectStore = create((set, get) => ({
     }
   },
 
+  appendUpdates: (newUpdates) => set((state) => {
+    // Prevent duplicates by checking _id
+    const existingIds = new Set(state.updates.map(u => u._id));
+    const filteredNew = newUpdates.filter(u => !existingIds.has(u._id));
+    return { updates: [...state.updates, ...filteredNew] };
+  }),
+
+  appendFiles: (newFiles) => set((state) => {
+    const existingIds = new Set(state.files.map(f => f._id));
+    const filteredNew = newFiles.filter(f => !existingIds.has(f._id));
+    return { files: [...state.files, ...filteredNew] };
+  }),
+
   clearProjects: () => set({ projects: [], updates: [], files: [], isFetched: false })
 }));

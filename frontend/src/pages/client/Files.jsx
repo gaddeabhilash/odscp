@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useProjectStore } from '../../store/projectStore';
+import { getFiles } from '../../services/projectService';
 import { getDownloadUrl } from '../../api/axios';
 import { Card } from '../../components/ui/Card';
 import { FileText, Download, ExternalLink, Search, FolderOpen, ChevronDown, Phone, MessageCircle, RefreshCcw } from 'lucide-react';
@@ -9,10 +10,12 @@ import { useLocation } from 'react-router-dom';
 
 export default function Files() {
   const { user, token } = useAuthStore();
-  const { projects, files: allFiles, fetchProjects } = useProjectStore();
+  const { projects, files: allFiles, fetchProjects, appendFiles } = useProjectStore();
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [search, setSearch] = useState('');
   const location = useLocation();
 
@@ -55,14 +58,35 @@ export default function Files() {
 
   const handleProjectChange = (e) => {
     setSelectedProjectId(e.target.value);
+    setPage(1); // Reset page on project change
   };
 
   const files = useMemo(() => {
     return allFiles.filter(f => 
       f.projectId === selectedProjectId || 
       (f.projectId && f.projectId._id === selectedProjectId)
-    );
+    ).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   }, [allFiles, selectedProjectId]);
+
+  const hasMore = files.length >= page * 20;
+
+  const loadMore = async () => {
+    if (!selectedProjectId || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const nextPage = page + 1;
+      const res = await getFiles(selectedProjectId, nextPage, 20);
+      const newFiles = res.data || [];
+      if (newFiles.length > 0) {
+        appendFiles(newFiles);
+        setPage(nextPage);
+      }
+    } catch (err) {
+      console.error('Failed to load more files', err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   const filteredFiles = files.filter(f => 
     f.fileName.toLowerCase().includes(search.toLowerCase())
@@ -163,6 +187,23 @@ export default function Files() {
               </div>
             </Card>
           ))}
+        </div>
+      )}
+
+      {hasMore && filteredFiles.length > 0 && search === '' && (
+        <div className="flex justify-center mt-12">
+          <button 
+            onClick={loadMore} 
+            disabled={loadingMore}
+            className="px-8 py-3 bg-white border-2 border-gray-100 text-indigo-600 rounded-xl font-bold uppercase tracking-widest text-xs hover:border-indigo-600 hover:bg-indigo-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm"
+          >
+            {loadingMore ? (
+              <>
+                <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                Loading...
+              </>
+            ) : 'Load More Files'}
+          </button>
         </div>
       )}
 
