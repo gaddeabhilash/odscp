@@ -34,21 +34,21 @@ export const AppLayout = () => {
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex overflow-hidden">
+    <div className="min-h-screen bg-stone-50 flex overflow-hidden font-sans">
       {/* Sidebar Desktop */}
-      <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col shrink-0">
-        <div className="h-16 flex items-center px-6 border-b border-gray-200">
-          <span className="text-xl font-bold font-sans text-indigo-600 tracking-tight">Client Portal.</span>
+      <aside className="w-64 bg-stone-900 border-r border-stone-800 hidden md:flex flex-col shrink-0 text-stone-300">
+        <div className="h-20 flex items-center px-8 border-b border-stone-800">
+          <span className="text-2xl font-serif text-brand-300 tracking-wider uppercase">Orniva.</span>
         </div>
-        <nav className="flex-1 py-6 flex flex-col gap-1 px-4">
+        <nav className="flex-1 py-8 flex flex-col gap-2 px-4">
           {links.map((link) => {
             const isActive = location.pathname.startsWith(link.path);
             return (
               <Link
                 key={link.name}
                 to={link.path}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors ${
-                  isActive ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all uppercase tracking-widest ${
+                  isActive ? 'bg-brand-600 text-white shadow-lg' : 'text-stone-400 hover:bg-stone-800 hover:text-stone-100'
                 }`}
               >
                 {link.icon}
@@ -57,21 +57,21 @@ export const AppLayout = () => {
             )
           })}
         </nav>
-        <div className="p-4 border-t border-gray-100">
-          <div className="flex items-center gap-3 px-3 py-2">
-            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold uppercase">
+        <div className="p-6 border-t border-stone-800 bg-stone-950/30">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-10 h-10 rounded-full bg-brand-800 border border-brand-600 flex items-center justify-center text-brand-100 font-serif text-lg uppercase">
               {user?.name?.charAt(0) || 'U'}
             </div>
             <div className="flex flex-col overflow-hidden">
-              <span className="text-sm font-semibold text-gray-900 truncate">{user?.name}</span>
-              <span className="text-xs text-gray-500 truncate capitalize">{user?.role}</span>
+              <span className="text-sm font-sans tracking-wide text-white truncate">{user?.name}</span>
+              <span className="text-[10px] uppercase tracking-widest text-brand-400 truncate">{user?.role}</span>
             </div>
           </div>
           <button 
             onClick={handleLogout}
-            className="mt-2 w-full flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-3 text-xs font-bold uppercase tracking-widest text-stone-400 hover:bg-red-900/30 hover:text-red-400 rounded-xl transition-all border border-transparent hover:border-red-900/50"
           >
-            <LogOut size={18} />
+            <LogOut size={16} />
             Sign Out
           </button>
         </div>
@@ -86,12 +86,12 @@ export const AppLayout = () => {
       )}
 
       {/* Mobile Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 w-72 bg-white z-50 transform transition-transform duration-300 ease-in-out md:hidden flex flex-col ${
+      <aside className={`fixed inset-y-0 left-0 w-72 bg-stone-900 z-50 transform transition-transform duration-300 ease-in-out md:hidden flex flex-col ${
         isMobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
       }`}>
-        <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200">
-          <span className="text-xl font-bold text-indigo-600 tracking-tight">Client Portal.</span>
-          <button onClick={closeMobileMenu} className="text-gray-400 hover:text-gray-600 p-1">
+        <div className="h-20 flex items-center justify-between px-6 border-b border-stone-800">
+          <span className="text-2xl font-serif text-brand-300 tracking-wider uppercase">Orniva.</span>
+          <button onClick={closeMobileMenu} className="text-stone-400 hover:text-white p-1">
             <CloseIcon size={24} />
           </button>
         </div>
@@ -103,8 +103,8 @@ export const AppLayout = () => {
                 key={link.name}
                 to={link.path}
                 onClick={closeMobileMenu}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold uppercase tracking-widest text-xs transition-all ${
-                  isActive ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
+                className={`flex items-center gap-3 px-4 py-3.5 rounded-xl uppercase tracking-widest text-xs transition-all ${
+                  isActive ? 'bg-brand-600 text-white shadow-lg' : 'text-stone-400 hover:bg-stone-800 hover:text-white'
                 }`}
               >
                 {link.icon}
@@ -113,22 +113,22 @@ export const AppLayout = () => {
             )
           })}
         </nav>
-        <div className="p-6 border-t border-gray-100 bg-gray-50/50">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black">
+        <div className="p-6 border-t border-stone-800 bg-stone-950/30">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-12 h-12 rounded-xl bg-brand-800 border border-brand-600 text-brand-100 flex items-center justify-center font-serif text-xl uppercase">
               {user?.name?.charAt(0) || 'U'}
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-black text-gray-900 uppercase tracking-tight">{user?.name}</span>
-              <span className="text-[10px] text-indigo-600 font-bold uppercase tracking-widest">{user?.role}</span>
+              <span className="text-sm tracking-wide text-white uppercase">{user?.name}</span>
+              <span className="text-[10px] text-brand-400 uppercase tracking-widest">{user?.role}</span>
             </div>
           </div>
           <button 
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 py-3.5 text-xs font-black uppercase tracking-widest text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-all"
+            className="w-full flex items-center justify-center gap-2 py-4 text-xs font-bold uppercase tracking-widest text-red-400 bg-red-900/20 hover:bg-red-900/40 rounded-xl transition-all border border-red-900/30"
           >
             <LogOut size={16} />
-            Terminte Session
+            Sign Out
           </button>
         </div>
       </aside>
@@ -136,17 +136,17 @@ export const AppLayout = () => {
       {/* Main Content Panel */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         {/* Mobile Header */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:hidden shrink-0">
-          <div className="flex items-center gap-3">
+        <header className="h-20 bg-stone-900 border-b border-stone-800 flex items-center justify-between px-6 md:hidden shrink-0">
+          <div className="flex items-center gap-4">
             <button 
               onClick={toggleMobileMenu}
-              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 text-stone-400 hover:text-white transition-colors"
             >
               <Menu size={24} />
             </button>
-            <span className="text-xl font-bold text-indigo-600 tracking-tight">Portal.</span>
+            <span className="text-xl font-serif text-brand-300 tracking-wider uppercase">Orniva.</span>
           </div>
-          <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 text-xs font-black">
+          <div className="w-10 h-10 rounded-full border border-brand-600 bg-brand-800 flex items-center justify-center text-brand-100 font-serif text-lg">
             {user?.name?.charAt(0)}
           </div>
         </header>

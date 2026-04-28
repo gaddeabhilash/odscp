@@ -36,47 +36,46 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Overview</h1>
-        <p className="text-gray-500 mt-1">Welcome back, {user.name}!</p>
+      <div className="mb-12">
+        <h1 className="text-4xl font-serif text-stone-900 tracking-tight">Design Portfolio</h1>
+        <p className="text-stone-500 mt-2 font-sans tracking-wide uppercase text-xs">Curated Spaces for {user.name}</p>
       </div>
 
       {projects.length === 0 ? (
-        <Card className="p-12 text-center text-gray-500 border-dashed border-2">
-          No active projects assigned to your account yet.
+        <Card className="p-12 text-center text-stone-400 border-dashed border-2 border-stone-200">
+          <p className="font-serif text-lg">Your design journey is about to begin.</p>
         </Card>
       ) : (
         projects.map(project => (
           <Card
             key={project._id}
-            className="p-6 md:p-8 transition-all hover:shadow-xl hover:-translate-y-1 group cursor-pointer border-gray-100"
+            className="p-6 md:p-8 transition-all hover:shadow-2xl hover:-translate-y-1 group cursor-pointer border-stone-100 rounded-none bg-white"
             onClick={() => navigate(`/timeline?projectId=${project._id}`)}
           >
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
               <div>
-                <h3 className="text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{project.projectName}</h3>
-                <p className="text-sm text-gray-500 mt-1">Started {new Date(project.createdAt).toLocaleDateString()}</p>
+                <h3 className="text-2xl font-serif text-stone-900 group-hover:text-brand-600 transition-colors uppercase tracking-widest">{project.projectName}</h3>
+                <p className="text-xs text-stone-400 mt-2 font-sans tracking-widest uppercase">Initiated {new Date(project.createdAt).toLocaleDateString()}</p>
               </div>
               <div className="flex items-center gap-4">
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${project.status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-indigo-100 text-indigo-700'
+                <span className={`px-4 py-1.5 border text-xs font-sans tracking-widest uppercase ${project.status === 'Completed' ? 'border-brand-200 bg-brand-50 text-brand-800' : 'border-stone-200 bg-stone-50 text-stone-700'
                   }`}>
-                  {project.status} Phase
+                  {project.status}
                 </span>
-                <ChevronRight className="text-gray-300 group-hover:text-indigo-600 transition-colors" size={24} />
+                <ChevronRight className="text-stone-300 group-hover:text-brand-600 transition-colors" size={24} />
               </div>
             </div>
 
-            <div className="mt-8 bg-gray-50 p-4 rounded-lg border border-gray-100">
-              <div className="flex justify-between text-sm mb-2">
-                <span className="font-semibold text-gray-700">Completion</span>
-                <span className="font-bold text-indigo-600">{project.progress}%</span>
+            <div className="mt-8 pt-6 border-t border-stone-100">
+              <div className="flex justify-between text-xs mb-3 font-sans tracking-widest uppercase">
+                <span className="text-stone-500">Design Progression</span>
+                <span className="font-semibold text-brand-700">{project.progress}%</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+              <div className="w-full bg-stone-100 h-1 overflow-hidden">
                 <div
-                  className="bg-indigo-600 h-3 rounded-full transition-all duration-1000 ease-out relative"
+                  className="bg-brand-600 h-1 transition-all duration-1000 ease-out"
                   style={{ width: `${project.progress}%` }}
                 >
-                  <div className="absolute inset-0 bg-white/20 w-full h-full"></div>
                 </div>
               </div>
             </div>
