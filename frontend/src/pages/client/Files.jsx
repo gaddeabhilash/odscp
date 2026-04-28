@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
-import { getProjects, getFiles } from '../../services/projectService';
+import { useProjectStore } from '../../store/projectStore';
+import { getFiles } from '../../services/projectService';
 import { getDownloadUrl } from '../../api/axios';
 import { Card } from '../../components/ui/Card';
 import { FileText, Download, ExternalLink, Search, FolderOpen, ChevronDown, Phone, MessageCircle, RefreshCcw } from 'lucide-react';
@@ -9,7 +10,7 @@ import { useLocation } from 'react-router-dom';
 
 export default function Files() {
   const { user, token } = useAuthStore();
-  const [projects, setProjects] = useState([]);
+  const { projects, fetchProjects } = useProjectStore();
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,11 +21,10 @@ export default function Files() {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const projRes = await getProjects(user._id);
-        const userProjects = projRes.data || [];
-        setProjects(userProjects);
+        // Fetch projects (will be instant if already cached in store)
+        const userProjects = await fetchProjects(user._id);
 
-        if (userProjects.length > 0) {
+        if (userProjects && userProjects.length > 0) {
           const params = new URLSearchParams(location.search);
           const urlPid = params.get('projectId');
           const initialPid = (urlPid && userProjects.some(p => p._id === urlPid)) 
@@ -41,7 +41,7 @@ export default function Files() {
       }
     };
     fetchInitialData();
-  }, [user._id, location.search]);
+  }, [user._id, location.search, fetchProjects]);
 
   const fetchProjectFiles = async (pid) => {
     if (!pid) return;

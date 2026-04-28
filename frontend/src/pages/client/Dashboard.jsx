@@ -1,21 +1,20 @@
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
-import { getProjects } from '../../services/projectService';
+import { useProjectStore } from '../../store/projectStore';
 import { Card } from '../../components/ui/Card';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 
 export default function Dashboard() {
   const { user } = useAuthStore();
-  const [projects, setProjects] = useState([]);
+  const { projects, fetchProjects } = useProjectStore();
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const res = await getProjects(user._id);
-        setProjects(res.data);
+        await fetchProjects(user._id);
       } catch (err) {
         console.error('Failed to load projects');
       } finally {
@@ -23,7 +22,7 @@ export default function Dashboard() {
       }
     };
     fetchDashboard();
-  }, [user._id]);
+  }, [user._id, fetchProjects]);
 
   if (loading) {
     return (
