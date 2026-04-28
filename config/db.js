@@ -31,9 +31,12 @@ const connectDB = async () => {
     ? process.env.MONGO_DNS_SERVERS.split(',').map((s) => s.trim()).filter(Boolean)
     : [];
 
-  if (dnsServers.length) {
+  // Only override DNS servers in non-production modes to prevent massive routing delays on PaaS providers like Render
+  if (dnsServers.length && process.env.NODE_ENV !== 'production') {
     dns.setServers(dnsServers);
-    console.log(`Using DNS servers: ${dnsServers.join(', ')}`);
+    console.log(`Using custom DNS servers (Development Mode): ${dnsServers.join(', ')}`);
+  } else if (dnsServers.length) {
+    console.log(`Ignored custom DNS override in Production to preserve native PaaS routing.`);
   }
 
   const mongoUri = buildMongoUri();
