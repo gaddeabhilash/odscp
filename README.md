@@ -22,4 +22,4 @@ Complete backend for managing projects, handling media uploads via Cloudinary, a
 - **Updates**: `/api/updates` (upload media), `/api/updates/project/:projectId`, `/api/updates/:id`
 - **Files**: `/api/files` (upload files), `/api/files/project/:projectId`
 
-<!-- updated: 2026-05-14 -->
+<!-- updated: 2026-05-18 -->
